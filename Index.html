@@ -1,1 +1,353 @@
-# zenoba-store-admin
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZENŌBA — Admin Panel</title>
+
+<style>
+:root {
+  --bg:#f5f1eb;
+  --card:rgba(255,255,255,.82);
+  --text:#211c19;
+  --muted:#81776f;
+  --accent:#c86b45;
+  --border:rgba(120,100,80,.15);
+}
+
+body.dark {
+  --bg:#111315;
+  --card:rgba(32,35,38,.88);
+  --text:#f5f2ed;
+  --muted:#aaa39b;
+  --accent:#e28a61;
+  --border:rgba(255,255,255,.10);
+}
+
+* {
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  font-family:Arial,sans-serif;
+}
+
+body {
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  transition:.3s;
+  overflow-x:hidden;
+}
+
+/* Blurred background character */
+.character {
+  position:fixed;
+  z-index:-1;
+  width:340px;
+  height:480px;
+  right:-70px;
+  top:100px;
+  opacity:.15;
+  filter:blur(18px);
+  pointer-events:none;
+}
+
+.character .head {
+  width:125px;
+  height:145px;
+  border-radius:50%;
+  background:var(--accent);
+  margin:auto;
+}
+
+.character .body {
+  width:260px;
+  height:300px;
+  border-radius:48% 48% 15% 15%;
+  background:linear-gradient(140deg,var(--accent),#51413b);
+  margin:-5px auto;
+}
+
+/* Layout */
+.wrapper {
+  display:flex;
+  min-height:100vh;
+}
+
+.sidebar {
+  width:245px;
+  padding:28px 18px;
+  background:var(--card);
+  border-right:1px solid var(--border);
+  backdrop-filter:blur(15px);
+}
+
+.logo {
+  font-size:25px;
+  font-weight:900;
+  letter-spacing:3px;
+  margin-bottom:40px;
+}
+
+.logo span {
+  color:var(--accent);
+}
+
+.menu button {
+  display:block;
+  width:100%;
+  text-align:left;
+  padding:15px;
+  margin:7px 0;
+  border:0;
+  border-radius:12px;
+  color:var(--muted);
+  background:transparent;
+  font-size:15px;
+  cursor:pointer;
+}
+
+.menu button:hover,
+.menu button.active {
+  background:var(--accent);
+  color:white;
+}
+
+.main {
+  flex:1;
+  padding:28px;
+  min-width:0;
+}
+
+.topbar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  margin-bottom:30px;
+}
+
+.topbar h1 {
+  font-size:26px;
+}
+
+.topbar p {
+  color:var(--muted);
+  margin-top:6px;
+}
+
+.theme {
+  padding:11px 16px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--card);
+  color:var(--text);
+  cursor:pointer;
+}
+
+.cards {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:17px;
+}
+
+.card {
+  background:var(--card);
+  border:1px solid var(--border);
+  padding:22px;
+  border-radius:18px;
+  backdrop-filter:blur(15px);
+}
+
+.card p {
+  color:var(--muted);
+  font-size:14px;
+}
+
+.card h2 {
+  font-size:27px;
+  margin-top:13px;
+}
+
+.section {
+  margin-top:25px;
+  padding:23px;
+  border-radius:18px;
+  background:var(--card);
+  border:1px solid var(--border);
+  backdrop-filter:blur(15px);
+}
+
+.section h2 {
+  margin-bottom:15px;
+}
+
+.section p {
+  color:var(--muted);
+  line-height:1.7;
+}
+
+.actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-top:18px;
+}
+
+.action {
+  padding:12px 18px;
+  border-radius:10px;
+  border:0;
+  background:var(--accent);
+  color:white;
+  cursor:pointer;
+}
+
+@media(max-width:850px) {
+  .sidebar {
+    width:190px;
+  }
+  .cards {
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:600px) {
+  .wrapper {
+    display:block;
+  }
+  .sidebar {
+    width:100%;
+    padding:15px;
+    border-right:0;
+    border-bottom:1px solid var(--border);
+  }
+  .logo {
+    margin-bottom:12px;
+  }
+  .menu {
+    display:flex;
+    overflow-x:auto;
+    gap:5px;
+  }
+  .menu button {
+    white-space:nowrap;
+    width:auto;
+    padding:11px;
+  }
+  .main {
+    padding:18px;
+  }
+  .topbar h1 {
+    font-size:21px;
+  }
+  .cards {
+    gap:10px;
+  }
+  .card {
+    padding:15px;
+  }
+  .card h2 {
+    font-size:21px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="character">
+  <div class="head"></div>
+  <div class="body"></div>
+</div>
+
+<div class="wrapper">
+
+<aside class="sidebar">
+  <div class="logo">ZENŌ<span>BA</span></div>
+
+  <div class="menu">
+    <button class="active">🏠 Dashboard</button>
+    <button>📦 Products</button>
+    <button>🛒 Orders</button>
+    <button>👥 Customers</button>
+    <button>📊 Sales</button>
+    <button>💰 Profit</button>
+    <button>⚙️ Settings</button>
+  </div>
+</aside>
+
+<main class="main">
+
+  <div class="topbar">
+    <div>
+      <h1>Dashboard</h1>
+      <p>Welcome to ZENŌBA Admin Panel</p>
+    </div>
+
+    <button class="theme" onclick="toggleTheme()">
+      🌙 / ☀️ Theme
+    </button>
+  </div>
+
+  <div class="cards">
+
+    <div class="card">
+      <p>Total Products</p>
+      <h2>--</h2>
+    </div>
+
+    <div class="card">
+      <p>Total Orders</p>
+      <h2>--</h2>
+    </div>
+
+    <div class="card">
+      <p>Total Sales</p>
+      <h2>₹ --</h2>
+    </div>
+
+    <div class="card">
+      <p>Total Profit</p>
+      <h2>₹ --</h2>
+    </div>
+
+  </div>
+
+  <div class="section">
+    <h2>📦 Product Management</h2>
+    <p>Products, prices, images and stock management will be connected here.</p>
+    <div class="actions">
+      <button class="action">Add Product</button>
+      <button class="action">Manage Products</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🛒 Recent Orders</h2>
+    <p>Customer orders from your ZENŌBA store will appear here after backend integration.</p>
+  </div>
+
+  <div class="section">
+    <h2>📈 Business Reports</h2>
+    <p>Sales reports and profit calculations will appear here after Supabase integration.</p>
+  </div>
+
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  document.body.classList.toggle("dark");
+
+  const isDark = document.body.classList.contains("dark");
+  localStorage.setItem("zenoba-theme", isDark ? "dark" : "light");
+}
+
+if(localStorage.getItem("zenoba-theme") === "dark") {
+  document.body.classList.add("dark");
+}
+</script>
+
+</body>
+  </html># zenoba-store-admin
