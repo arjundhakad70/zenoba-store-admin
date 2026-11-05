@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111315">
+
 <title>ZENŌBA — Admin Login</title>
 
 <style>
@@ -40,6 +42,37 @@ body {
   background:var(--bg);
   color:var(--text);
   transition:.3s;
+  overflow:hidden;
+}
+
+/* Background character effect */
+
+.character {
+  position:fixed;
+  z-index:-1;
+  width:300px;
+  height:430px;
+  right:-80px;
+  top:100px;
+  opacity:.13;
+  filter:blur(18px);
+  pointer-events:none;
+}
+
+.character .head {
+  width:120px;
+  height:140px;
+  border-radius:50%;
+  background:var(--accent);
+  margin:auto;
+}
+
+.character .body {
+  width:250px;
+  height:280px;
+  border-radius:48% 48% 15% 15%;
+  background:linear-gradient(140deg,var(--accent),#51413b);
+  margin:-5px auto;
 }
 
 .login-box {
@@ -47,14 +80,15 @@ body {
   max-width:420px;
   padding:35px;
   border:1px solid var(--border);
-  border-radius:24px;
+  border-radius:25px;
   background:var(--card);
   box-shadow:0 15px 50px rgba(0,0,0,.12);
+  backdrop-filter:blur(15px);
 }
 
 .logo {
   text-align:center;
-  font-size:34px;
+  font-size:40px;
   font-weight:900;
   letter-spacing:4px;
   margin-bottom:12px;
@@ -67,35 +101,34 @@ body {
 .tagline {
   text-align:center;
   color:var(--muted);
-  margin-bottom:35px;
+  font-size:15px;
+  margin-bottom:45px;
 }
 
 h2 {
-  font-size:25px;
-  margin-bottom:9px;
+  font-size:27px;
+  margin-bottom:10px;
 }
 
 .subtitle {
   color:var(--muted);
   margin-bottom:25px;
-  font-size:14px;
 }
 
 label {
   display:block;
-  margin:17px 0 8px;
-  font-size:14px;
   font-weight:bold;
+  margin:20px 0 10px;
 }
 
 input {
   width:100%;
-  padding:15px;
+  padding:16px;
   border:1px solid var(--border);
-  border-radius:11px;
+  border-radius:13px;
   background:var(--bg);
   color:var(--text);
-  font-size:15px;
+  font-size:16px;
   outline:none;
 }
 
@@ -103,68 +136,83 @@ input:focus {
   border-color:var(--accent);
 }
 
-.password-box {
+.password-wrap {
   position:relative;
 }
 
-.password-box button {
+.password-wrap input {
+  padding-right:55px;
+}
+
+.eye {
   position:absolute;
-  right:12px;
-  top:12px;
-  border:0;
-  background:none;
-  color:var(--muted);
+  right:15px;
+  top:16px;
   cursor:pointer;
-  font-size:18px;
+  font-size:20px;
 }
 
 .forgot {
   display:block;
   text-align:right;
-  margin-top:13px;
   color:var(--accent);
+  margin-top:14px;
+  cursor:pointer;
+  border:0;
+  background:none;
   font-size:14px;
-  text-decoration:none;
 }
 
-.login-btn {
+.signin {
   width:100%;
-  margin-top:25px;
-  padding:16px;
+  padding:17px;
   border:0;
-  border-radius:12px;
+  border-radius:13px;
   background:var(--accent);
   color:white;
-  font-size:16px;
+  font-size:17px;
   font-weight:bold;
+  margin-top:28px;
   cursor:pointer;
 }
 
-.login-btn:hover {
-  opacity:.9;
+.signin:disabled {
+  opacity:.6;
+  cursor:wait;
+}
+
+.message {
+  margin-top:16px;
+  font-size:14px;
+  line-height:1.5;
+  overflow-wrap:anywhere;
 }
 
 .theme {
   display:block;
   margin:22px auto 0;
-  padding:10px 17px;
+  padding:12px 22px;
   border:1px solid var(--border);
-  border-radius:10px;
+  border-radius:12px;
   background:var(--bg);
   color:var(--text);
   cursor:pointer;
 }
 
-.footer {
+footer {
   text-align:center;
-  margin-top:28px;
   color:var(--muted);
+  margin-top:35px;
   font-size:12px;
 }
 
-@media(max-width:480px) {
+@media(max-width:450px) {
   .login-box {
-    padding:27px 22px;
+    padding:25px;
+  }
+
+  .logo {
+    font-size:34px;
   }
 }
 </style>
@@ -172,20 +220,32 @@ input:focus {
 
 <body>
 
+<div class="character">
+  <div class="head"></div>
+  <div class="body"></div>
+</div>
+
 <div class="login-box">
 
   <div class="logo">ZENŌ<span>BA</span></div>
-  <p class="tagline">Clothing & Everyday Style</p>
+
+  <div class="tagline">
+    Clothing & Everyday Style
+  </div>
 
   <h2>Admin Login</h2>
-  <p class="subtitle">Sign in to manage your store.</p>
+
+  <p class="subtitle">
+    Sign in to manage your store.
+  </p>
 
   <form id="loginForm">
 
     <label for="email">Email Address</label>
+
     <input
-      type="email"
       id="email"
+      type="email"
       placeholder="Enter admin email"
       autocomplete="username"
       required
@@ -193,76 +253,267 @@ input:focus {
 
     <label for="password">Password</label>
 
-    <div class="password-box">
+    <div class="password-wrap">
+
       <input
-        type="password"
         id="password"
+        type="password"
         placeholder="Enter password"
         autocomplete="current-password"
         required
       >
-      <button type="button" onclick="togglePassword()">
-        👁️
-      </button>
+
+      <span class="eye" id="eye">👁️</span>
+
     </div>
 
-    <a href="#" class="forgot" onclick="forgotPassword(event)">
+    <button
+      type="button"
+      class="forgot"
+      id="forgotBtn"
+    >
       Forgot Password?
-    </a>
+    </button>
 
-    <button class="login-btn" type="submit">
+    <button
+      type="submit"
+      class="signin"
+      id="loginBtn"
+    >
       Sign In →
     </button>
 
+    <div
+      class="message"
+      id="message"
+      role="status"
+      aria-live="polite"
+    ></div>
+
   </form>
 
-  <button class="theme" onclick="toggleTheme()">
+  <button class="theme" id="themeBtn">
     🌙 / ☀️ Change Theme
   </button>
 
-  <div class="footer">
+  <footer>
     © 2026 ZENŌBA. All rights reserved.
-  </div>
+  </footer>
 
 </div>
 
-<script>
-function togglePassword() {
-  const field = document.getElementById("password");
+<script type="module">
 
-  field.type =
-    field.type === "password" ? "text" : "password";
+import { createClient }
+from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+/* SUPABASE CONFIGURATION */
+
+const SUPABASE_URL =
+"https://aahvyhfluzzwbnktyhug.supabase.co";
+
+const SUPABASE_KEY =
+"sb_publishable_y8Koz-TIeH5maRkcCOCwLg_aSmJp2c-";
+
+const supabase = createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+/* ELEMENTS */
+
+const form = document.getElementById("loginForm");
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const message = document.getElementById("message");
+const loginBtn = document.getElementById("loginBtn");
+
+/* MESSAGE */
+
+function showMessage(text, success = false) {
+  message.textContent = text;
+  message.style.color = success ? "#16834a" : "#d04444";
 }
 
-function toggleTheme() {
+/* ADMIN VERIFICATION */
+
+async function verifyAdmin(user) {
+
+  const { data, error } = await supabase
+    .from("store_admins")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(
+      "Admin verification failed. Check store_admins RLS policy."
+    );
+  }
+
+  if (!data) {
+    throw new Error(
+      "Access denied. This account is not an authorized admin."
+    );
+  }
+
+  return true;
+}
+
+/* LOGIN */
+
+form.addEventListener("submit", async (event) => {
+
+  event.preventDefault();
+
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+
+  loginBtn.disabled = true;
+  loginBtn.textContent = "Checking...";
+
+  showMessage("Verifying your account...");
+
+  try {
+
+    const { data, error } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    await verifyAdmin(data.user);
+
+    showMessage(
+      "Admin verified! Opening dashboard...",
+      true
+    );
+
+    window.location.replace("./index.html");
+
+  } catch (error) {
+
+    await supabase.auth.signOut();
+
+    showMessage(
+      error.message || "Login failed."
+    );
+
+    loginBtn.disabled = false;
+    loginBtn.textContent = "Sign In →";
+
+  }
+
+});
+
+/* EXISTING SESSION */
+
+async function checkExistingSession() {
+
+  try {
+
+    const { data, error } =
+      await supabase.auth.getSession();
+
+    if (error) throw error;
+
+    if (!data.session) return;
+
+    await verifyAdmin(data.session.user);
+
+    window.location.replace("./index.html");
+
+  } catch (error) {
+
+    await supabase.auth.signOut();
+
+    showMessage(error.message);
+
+  }
+}
+
+/* FORGOT PASSWORD */
+
+document.getElementById("forgotBtn")
+.addEventListener("click", async () => {
+
+  const email = emailInput.value.trim();
+
+  if (!email) {
+    showMessage("पहले अपना Admin Email डालो।");
+    emailInput.focus();
+    return;
+  }
+
+  try {
+
+    const { error } =
+      await supabase.auth.resetPasswordForEmail(
+        email,
+        {
+          redirectTo:
+            window.location.origin + "/Login.html"
+        }
+      );
+
+    if (error) throw error;
+
+    showMessage(
+      "Password reset email भेज दिया गया है।",
+      true
+    );
+
+  } catch (error) {
+
+    showMessage(error.message);
+
+  }
+
+});
+
+/* SHOW / HIDE PASSWORD */
+
+document.getElementById("eye")
+.addEventListener("click", () => {
+
+  passwordInput.type =
+    passwordInput.type === "password"
+      ? "text"
+      : "password";
+
+});
+
+/* DARK / LIGHT MODE */
+
+document.getElementById("themeBtn")
+.addEventListener("click", () => {
+
   document.body.classList.toggle("dark");
 
   localStorage.setItem(
-    "zenoba-theme",
+    "zenobaTheme",
     document.body.classList.contains("dark")
       ? "dark"
       : "light"
   );
-}
 
-if(localStorage.getItem("zenoba-theme") === "dark") {
+});
+
+if (
+  localStorage.getItem("zenobaTheme") === "dark"
+) {
   document.body.classList.add("dark");
 }
 
-function forgotPassword(event) {
-  event.preventDefault();
-  alert("Password recovery will be connected with Supabase.");
-}
+/* START */
 
-document.getElementById("loginForm").addEventListener(
-  "submit",
-  function(event) {
-    event.preventDefault();
+checkExistingSession();
 
-    alert("Login authentication is not connected yet. Please wait for Supabase integration.");
-  }
-);
 </script>
 
 </body>
-  </html>
+                          </html>
