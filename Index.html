@@ -558,6 +558,340 @@ supabase.auth.onAuthStateChange((event) => {
 });
 
 verifyAdmin();
+// ==================================
+// ZENŌBA ORDER MANAGEMENT SYSTEM
+// ==================================
+
+const ordersList = document.getElementById("ordersList");
+const orderMessage = document.getElementById("orderMessage");
+const orderSearch = document.getElementById("orderSearch");
+const orderFilter = document.getElementById("orderFilter");
+const refreshOrders = document.getElementById("refreshOrders");
+const exportOrders = document.getElementById("exportOrders");
+
+let allOrders = [];
+let allOrderItems = [];
+
+const orderStatuses = [
+  "pending",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled"
+];
+
+function escapeOrderHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[char]);
+}
+
+function formatOrderDate(value) {
+  if (!value) return "Date unavailable";
+
+  const date = new Date(value);
+
+  return isNaN(date.getTime())
+    ? "Date unavailable"
+    : date.toLocaleString("en-IN");
+}
+
+function formatRupees(value) {
+  return "₹" + Number(value || 0).toLocaleString("en-IN");
+}
+
+// LOAD ORDERS FROM SUPABASE
+async function loadOrders() {
+  orderMessage.textContent = "Loading orders...";
+  ordersList.innerHTML = "";
+
+  try {
+    const { data: orders, error } = await supabase
+      .from("orders")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    allOrders = orders || [];
+    allOrderItems = [];
+
+    if (allOrders.length > 0) {
+      const orderIds = allOrders.map(order => order.id);
+
+      const { data: items, error: itemError } = await supabase
+        .from("order_items")
+        .select("*")
+        .in("order_id", orderIds);
+
+      if (itemError) throw itemError;
+
+      allOrderItems = items || [];
+    }
+
+    orderMessage.textContent =
+      allOrders.length + " order(s) found.";
+
+    renderOrders();
+
+  } catch (error) {
+    console.error("Order loading error:", error);
+
+    orderMessage.textContent =
+      "Orders load nahi hue: " + error.message;
+  }
+}
+
+// FILTER AND SEARCH
+function getVisibleOrders() {
+  const search = (orderSearch.value || "").toLowerCase().trim();
+  const filter = orderFilter.value;
+
+  return allOrders.filter(order => {
+    const status = String(order.status || "pending").toLowerCase();
+
+    const matchesStatus =
+      filter === "all" || status === filter;
+
+    const matchesSearch = [
+      order.id,
+      order.customer_name,
+      order.phone,
+      order.address
+    ].some(value =>
+      String(value || "").toLowerCase().includes(search)
+    );
+
+    return matchesStatus && matchesSearch;
+  });
+}
+
+// DISPLAY ORDERS
+function renderOrders() {
+  const visibleOrders = getVisibleOrders();
+
+  if (!visibleOrders.length) {
+    ordersList.innerHTML =
+      '<p style="color:var(--muted);padding:15px;">No orders found.</p>';
+    return;
+  }
+
+  ordersList.innerHTML = visibleOrders.map(order => {
+    const status = String(order.status || "pending").toLowerCase();
+
+    const items = allOrderItems.filter(
+      item => String(item.order_id) === String(order.id)
+    );
+
+    const itemHTML = items.length
+      ? items.map(item => `
+          <div style="padding:8px 0;border-bottom:1px solid var(--border);">
+            <strong>${escapeOrderHTML(item.product_name || "Product")}</strong>
+            <br>
+            Size: ${escapeOrderHTML(item.size || "-")}
+            &nbsp; | &nbsp;
+            Qty: ${escapeOrderHTML(item.quantity)}
+            &nbsp; | &nbsp;
+            Price: ${formatRupees(item.unit_price)}
+          </div>
+        `).join("")
+      : '<p style="color:var(--muted);">No item details found.</p>';
+
+    const statusOptions = orderStatuses.map(option => `
+      <option value="${option}" ${status === option ? "selected" : ""}>
+        ${option.charAt(0).toUpperCase() + option.slice(1)}
+      </option>
+    `).join("");
+
+    return `
+      <div style="
+        background:var(--card);
+        border:1px solid var(--border);
+        border-radius:15px;
+        padding:18px;
+        margin-bottom:15px;
+      ">
+
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <h3>Order #${escapeOrderHTML(order.id)}</h3>
+          <strong>${formatRupees(order.total)}</strong>
+        </div>
+
+        <p style="margin-top:12px;">
+          👤 ${escapeOrderHTML(order.customer_name)}
+        </p>
+
+        <p>📞 ${escapeOrderHTML(order.phone)}</p>
+
+        <p>📍 ${escapeOrderHTML(order.address)}</p>
+
+        <p style="margin-top:10px;color:var(--muted);">
+          📅 ${formatOrderDate(order.created_at)}
+        </p>
+
+        <h4 style="margin-top:16px;">📦 Products</h4>
+
+        <div style="margin-top:8px;">
+          ${itemHTML}
+        </div>
+
+        <div style="margin-top:18px;">
+          <label><strong>🚚 Order Status:</strong></label>
+
+          <select
+            class="order-status"
+            data-order-id="${escapeOrderHTML(order.id)}"
+            style="
+              display:block;
+              margin-top:8px;
+              padding:11px;
+              border-radius:9px;
+              background:var(--bg);
+              color:var(--text);
+              border:1px solid var(--border);
+              width:100%;
+              max-width:250px;
+            "
+          >
+            ${statusOptions}
+          </select>
+        </div>
+
+      </div>
+    `;
+  }).join("");
+}
+
+// UPDATE ORDER STATUS
+ordersList.addEventListener("change", async event => {
+  if (!event.target.classList.contains("order-status")) return;
+
+  const select = event.target;
+  const orderId = select.dataset.orderId;
+  const newStatus = select.value;
+
+  select.disabled = true;
+  orderMessage.textContent = "Updating order status...";
+
+  try {
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: newStatus })
+      .eq("id", orderId);
+
+    if (error) throw error;
+
+    orderMessage.textContent =
+      "Order #" + orderId + " status updated successfully.";
+
+    await loadOrders();
+
+  } catch (error) {
+    console.error("Status update error:", error);
+
+    orderMessage.textContent =
+      "Status update failed: " + error.message;
+
+    select.disabled = false;
+  }
+});
+
+// SEARCH AND FILTER EVENTS
+orderSearch.addEventListener("input", renderOrders);
+orderFilter.addEventListener("change", renderOrders);
+
+// REFRESH BUTTON
+refreshOrders.addEventListener("click", loadOrders);
+
+// EXPORT ORDERS AS CSV
+function csvCell(value) {
+  return '"' + String(value ?? "").replace(/"/g, '""') + '"';
+}
+
+exportOrders.addEventListener("click", () => {
+  const visibleOrders = getVisibleOrders();
+
+  if (!visibleOrders.length) {
+    alert("Export karne ke liye koi order nahi hai.");
+    return;
+  }
+
+  const rows = [[
+    "Order ID",
+    "Customer Name",
+    "Phone",
+    "Address",
+    "Product",
+    "Size",
+    "Quantity",
+    "Unit Price",
+    "Total",
+    "Status",
+    "Order Date"
+  ]];
+
+  visibleOrders.forEach(order => {
+    const items = allOrderItems.filter(
+      item => String(item.order_id) === String(order.id)
+    );
+
+    if (!items.length) {
+      rows.push([
+        order.id,
+        order.customer_name,
+        order.phone,
+        order.address,
+        "",
+        "",
+        "",
+        "",
+        order.total,
+        order.status,
+        order.created_at
+      ]);
+    } else {
+      items.forEach(item => {
+        rows.push([
+          order.id,
+          order.customer_name,
+          order.phone,
+          order.address,
+          item.product_name,
+          item.size,
+          item.quantity,
+          item.unit_price,
+          order.total,
+          order.status,
+          order.created_at
+        ]);
+      });
+    }
+  });
+
+  const csv = "\uFEFF" + rows
+    .map(row => row.map(csvCell).join(","))
+    .join("\r\n");
+
+  const blob = new Blob([csv], {
+    type: "text/csv;charset=utf-8;"
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "ZENŌBA-Orders.csv";
+  link.click();
+
+  URL.revokeObjectURL(url);
+});
+
+// INITIAL LOAD
+loadOrders();
 </script>
 
 </body>
